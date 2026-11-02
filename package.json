@@ -1,0 +1,13 @@
+{
+  "name": "zaklyatye",
+  "version": "1.0.0",
+  "description": "Заклятые — карточная игра для компании в Telegram",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node bot/server.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

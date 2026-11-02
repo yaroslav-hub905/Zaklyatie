@@ -1,0 +1,785 @@
+<title>Заклятые</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Neucha&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: одна колонка как мини‑приложение; бумага с карандашным зерном, чернильные линии «дрожат», красная сургучная печать — единственный цвет */
+:root{
+  --paper:#ecebe5;
+  --paper-2:#f7f6f2;
+  --ink:#171615;
+  --ink-soft:#5b5853;
+  --char:#1b1a19;
+  --chalk:#efeee8;
+  --seal:#a8281f;
+  --line:rgba(23,22,21,.22);
+  --f-display:"Amatic SC","Comic Sans MS",cursive;
+  --f-hand:"Neucha","Segoe Print","Comic Sans MS",cursive;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --card-w:min(58vw,228px);
+  color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--paper);color:var(--ink)}
+body{font:400 18px/1.4 var(--f-hand);overflow-x:hidden;min-height:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px dashed var(--seal);outline-offset:3px}
+
+/* бумага: зерно + виньетка карандашной штриховки */
+.paper{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.09 0 0 0 0 0.08 0 0 0 0 0.08 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");}
+.paper::after{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(-38deg,var(--ink) 0 1px,transparent 1px 5px);opacity:.16;
+  -webkit-mask:radial-gradient(85% 75% at 50% 42%,transparent 62%,#000 112%);mask:radial-gradient(85% 75% at 50% 42%,transparent 62%,#000 112%)}
+
+.app{position:relative;z-index:1;max-width:460px;margin:0 auto;min-height:100dvh;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 22px}
+.screen{display:flex;flex-direction:column;gap:16px;min-height:calc(100dvh - 36px);animation:rise .5s cubic-bezier(.2,.8,.2,1)}
+
+/* типографика */
+.display{font:700 clamp(64px,21vw,96px)/.85 var(--f-display);letter-spacing:.02em;margin:0;text-align:center}
+.h2{font:700 40px/1 var(--f-display);margin:0;letter-spacing:.03em}
+.mono{font:600 11px/1.4 var(--f-mono);letter-spacing:.18em;text-transform:uppercase}
+.muted{color:var(--ink-soft)}
+.center{text-align:center}
+.lead{font-size:19px;text-align:center;margin:0 auto;max-width:30ch;text-wrap:balance}
+
+/* верхняя панель */
+.topbar{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;min-height:44px}
+.topbar .mono{text-align:center}
+.icon-btn{width:44px;height:44px;border:0;background:none;display:grid;place-items:center;padding:0;border-radius:50%}
+.icon-btn svg{width:26px;height:26px}
+.icon-btn:active{transform:scale(.92)}
+
+/* кнопки, обведённые от руки */
+.btn{position:relative;border:0;background:none;min-height:56px;width:100%;font:400 21px/1 var(--f-hand);display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .15s}
+.btn::before{content:"";position:absolute;inset:0;border:2px solid var(--ink);border-radius:255px 18px 225px 16px/16px 225px 18px 255px;transition:transform .2s}
+.btn.solid{color:var(--paper-2)}
+.btn.solid::before{background:var(--ink)}
+.btn span,.btn svg{position:relative}
+.btn:hover::before{transform:rotate(-.6deg)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.35;pointer-events:none}
+.btn.seal::before{background:var(--seal);border-color:var(--seal)}
+.btn.seal{color:var(--paper-2)}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stack{display:flex;flex-direction:column;gap:12px}
+.spacer{flex:1}
+
+/* дрожащие линии */
+.boil{filter:url(#r1)}
+body.b2 .boil{filter:url(#r2)}
+body.b3 .boil{filter:url(#r3)}
+.ink path,.ink circle,.ink line,.ink rect,.ink ellipse,.ink polyline{fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.ink .fill{fill:currentColor;stroke:none}
+
+/* ГЛАВНЫЙ */
+.hero{position:relative;width:min(84vw,330px);aspect-ratio:1;margin:6px auto 0}
+.hero > svg.ink{width:100%;height:100%;overflow:visible}
+.hero .ring{stroke-dasharray:900;stroke-dashoffset:900;animation:draw 2.2s .2s cubic-bezier(.6,.1,.3,1) forwards}
+.hero .rays{transform-origin:150px 150px;animation:spin 60s linear infinite}
+.hero .c-white{transform-origin:150px 160px;animation:float-a 5s ease-in-out infinite}
+.hero .c-black{transform-origin:150px 160px;animation:float-b 5.6s ease-in-out infinite}
+.hero .spark{animation:twinkle 2.4s ease-in-out infinite}
+.hero .spark:nth-of-type(2n){animation-delay:.8s}
+.hero .spark:nth-of-type(3n){animation-delay:1.5s}
+.seal-mark{position:absolute;right:6%;bottom:9%;width:64px;height:64px;animation:stamp .5s 1.6s cubic-bezier(.3,1.6,.5,1) both}
+.side-note{position:absolute;top:14%;font:600 10px/1.7 var(--f-mono);letter-spacing:.16em;color:var(--ink-soft)}
+.side-note.l{left:-2px}.side-note.r{right:-2px;text-align:right}
+
+/* мелкие частицы */
+.motes{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.motes i{position:absolute;width:3px;height:3px;border-radius:50%;background:var(--ink);opacity:0;animation:mote 6s linear infinite}
+
+/* НАСТРОЙКА */
+.players{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 8px 6px 14px;border:2px solid var(--ink);border-radius:20px 14px 22px 12px/12px 22px 14px 20px;background:var(--paper-2);font-size:19px;animation:pop .3s cubic-bezier(.3,1.5,.5,1)}
+.chip button{border:0;background:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;padding:0;font-size:18px;line-height:1}
+.chip button:hover{background:var(--line)}
+.add-row{display:flex;gap:8px}
+.add-row input{flex:1;min-width:0;height:52px;border:0;border-bottom:2px solid var(--ink);background:transparent;font:400 21px var(--f-hand);padding:0 4px;color:var(--ink)}
+.add-row input::placeholder{color:var(--ink-soft);opacity:.7}
+.add-row .btn{width:auto;padding:0 20px;min-height:52px}
+.label{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1.5px dashed var(--line);padding-bottom:6px}
+
+.modes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding-top:8px}
+.mode{border:0;background:none;padding:0;display:flex;flex-direction:column;gap:6px;align-items:center;transition:transform .35s cubic-bezier(.3,1.4,.5,1)}
+.mode .mini{position:relative;width:100%;aspect-ratio:.68;border-radius:10px;border:2px solid var(--ink);background:var(--paper-2);display:grid;place-items:center;overflow:hidden;transition:box-shadow .3s}
+.mode .mini.dark{background:var(--char);color:var(--chalk)}
+.mode .mini svg{width:78%;height:auto}
+.mode .name{font:700 21px/1 var(--f-display);letter-spacing:.04em}
+.mode .tick{position:absolute;top:-8px;right:-8px;width:26px;height:26px;opacity:0;transform:scale(.3) rotate(-30deg);transition:.3s cubic-bezier(.3,1.6,.5,1)}
+.mode[aria-pressed="true"]{transform:translateY(-8px) rotate(-2deg)}
+.mode[aria-pressed="true"] .mini{box-shadow:4px 6px 0 var(--ink)}
+.mode[aria-pressed="true"] .tick{opacity:1;transform:none}
+.mode-wrap{position:relative}
+.mode-desc{min-height:3em;margin:0;font-size:18px;animation:rise .35s}
+
+.seg{display:grid;grid-template-columns:repeat(3,1fr);border:2px solid var(--ink);border-radius:14px 10px 16px 9px/9px 16px 10px 14px;overflow:hidden}
+.seg button{border:0;background:none;min-height:46px;font-size:20px}
+.seg button+button{border-left:2px solid var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper-2)}
+
+/* КАРТЫ */
+.card{position:relative;width:var(--card-w);aspect-ratio:.66;border-radius:16px;max-width:100%}
+.face{position:absolute;inset:0;border-radius:16px;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:0 1px 0 rgba(0,0,0,.25),3px 5px 0 rgba(23,22,21,.85)}
+.face.white{background:var(--paper-2);color:var(--ink)}
+.face.black{background:var(--char);color:var(--chalk)}
+.face .frame{position:absolute;inset:0;width:100%;height:100%}
+.face .frame rect{fill:none;stroke:currentColor;stroke-width:1.6}
+.face-in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:9% 9% 8%}
+.face-in .top{width:100%;display:flex;justify-content:space-between;font:600 9px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase}
+.face-in .art{width:74%;flex:1;display:grid;place-items:center}
+.face-in .art svg{width:100%;height:auto}
+.face-in .ttl{font:700 34px/.9 var(--f-display);letter-spacing:.05em;text-align:center}
+.face-in .sub{font:600 8.5px/1 var(--f-mono);letter-spacing:.2em;opacity:.7;margin-top:6px}
+
+.back{display:grid;place-items:center}
+.back.white{background-color:var(--paper-2);color:var(--ink);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26'%3E%3Cpath d='M13 17c-4-3-5-5-3.6-6.5 1.2-1.2 2.8-.4 3.6.8.8-1.2 2.4-2 3.6-.8C18 12 17 14 13 17z' fill='none' stroke='%23171615' stroke-width='1' opacity='.45'/%3E%3C/svg%3E")}
+.back.black{background-color:var(--char);color:var(--chalk);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26'%3E%3Cpath d='M14 6l-4 8h4l-2 6 5-8h-4z' fill='none' stroke='%23efeee8' stroke-width='1' stroke-linejoin='round' opacity='.35'/%3E%3C/svg%3E")}
+.back .emblem{width:66%;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:inherit;background-color:inherit}
+.back.white .emblem{background:var(--paper-2)}
+.back.black .emblem{background:var(--char)}
+.back .emblem svg{width:100%;height:100%}
+.back .word{position:absolute;bottom:8%;left:0;right:0;text-align:center;font:600 9px/1 var(--f-mono);letter-spacing:.3em}
+.back .word.t{top:8%;bottom:auto}
+.back-mix{position:absolute;inset:0;border-radius:16px;overflow:hidden}
+.back-mix .face{box-shadow:none}
+.back-mix .half-b{clip-path:polygon(100% 0,100% 100%,0 100%)}
+.back-mix .split{position:absolute;inset:0;width:100%;height:100%}
+
+/* 3D переворот */
+.flip{perspective:1100px}
+.flip .card3d{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.3,1.3,.4,1)}
+.flip .card3d .front{transform:rotateY(180deg)}
+.flip.open .card3d{transform:rotateY(180deg)}
+
+/* ИГРА */
+.scores{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:4px 2px 8px;margin:0 -2px}
+.scores::-webkit-scrollbar{display:none}
+.score{flex:none;display:flex;align-items:center;gap:8px;padding:5px 12px;border:2px solid var(--ink);border-radius:18px 12px 20px 10px/10px 20px 12px 18px;font-size:18px;transition:background .3s,color .3s,transform .3s}
+.score b{font:600 13px var(--f-mono);font-variant-numeric:tabular-nums}
+.score.on{background:var(--ink);color:var(--paper-2);transform:translateY(-2px)}
+.score.bump b{animation:bump .5s}
+.turn{text-align:center;display:flex;flex-direction:column;gap:0;align-items:center}
+.turn .who{font:700 54px/.95 var(--f-display);letter-spacing:.03em;animation:rise .45s}
+.turn .who.swap{animation:none}
+
+.table{position:relative;flex:1;min-height:360px;display:grid;place-items:center}
+.table .circle{position:absolute;inset:50% auto auto 50%;width:min(92vw,400px);aspect-ratio:1;translate:-50% -50%;pointer-events:none;color:var(--ink);opacity:.9}
+.table .circle .draw{stroke-dasharray:1300;stroke-dashoffset:1300;animation:draw 1.8s cubic-bezier(.6,.1,.3,1) forwards}
+.table .circle .orbit{transform-origin:200px 200px;animation:spin 80s linear infinite}
+.decks{position:relative;display:flex;gap:min(6vw,28px);justify-content:center;align-items:center;transition:opacity .35s,transform .45s}
+.deck{border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:12px;--cw:min(36vw,150px)}
+.decks.one .deck{--cw:min(48vw,190px)}
+.deck .pile{position:relative;width:var(--cw);aspect-ratio:.66;animation:levitate 4.5s ease-in-out infinite}
+.deck:nth-child(2) .pile{animation-delay:-2s}
+.deck .pile .face{transition:transform .3s}
+.deck .pile .face:nth-child(1){transform:translate(6px,6px) rotate(3deg)}
+.deck .pile .face:nth-child(2){transform:translate(3px,3px) rotate(-2deg)}
+.deck:hover .pile .face:nth-child(1){transform:translate(10px,4px) rotate(7deg)}
+.deck:hover .pile .face:nth-child(2){transform:translate(-5px,2px) rotate(-6deg)}
+.deck .lbl{font:700 26px/1 var(--f-display);letter-spacing:.06em}
+.deck .cnt{font:600 10px var(--f-mono);letter-spacing:.18em;color:var(--ink-soft);margin-top:-8px}
+.deck.shuffle .pile .face:nth-child(1){animation:riffle-a .9s ease-in-out}
+.deck.shuffle .pile .face:nth-child(2){animation:riffle-b .9s ease-in-out}
+.deck.shuffle .pile .face:nth-child(3){animation:riffle-c .9s ease-in-out}
+.decks.away{opacity:0;transform:scale(.85);pointer-events:none}
+
+.drawn{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.drawn .flip{width:var(--card-w);aspect-ratio:.66;pointer-events:auto;animation:fly-in .6s cubic-bezier(.2,.9,.3,1.1) both}
+.drawn .flip.toss{animation:toss .55s cubic-bezier(.6,0,.8,.4) forwards}
+.drawn .flip.toss-r{animation:toss-r .55s cubic-bezier(.6,0,.8,.4) forwards}
+
+.reading{display:flex;flex-direction:column;gap:6px;min-height:150px}
+.reading .meta{display:flex;justify-content:space-between;border-bottom:1.5px dashed var(--line);padding-bottom:6px}
+.reading .text{font-size:22px;line-height:1.3;margin:0;text-wrap:pretty;animation:rise .5s .15s both}
+.reading .text b{font-weight:400;background:linear-gradient(transparent 62%,rgba(168,40,31,.28) 62%);padding:0 2px}
+.reading .rule{font-size:16px;color:var(--ink-soft);margin:0;animation:rise .5s .3s both}
+.hint{text-align:center;color:var(--ink-soft);animation:beckon 2.6s ease-in-out infinite}
+
+.toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));translate:-50% 0;z-index:20;background:var(--ink);color:var(--paper-2);padding:10px 18px;border-radius:20px 12px 22px 10px/10px 22px 12px 20px;font-size:18px;animation:toast 2.4s forwards;white-space:nowrap;max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis}
+.plus{position:fixed;z-index:15;font:700 46px/1 var(--f-display);color:var(--seal);pointer-events:none;animation:plus 1s forwards}
+
+/* КОЛЛЕКЦИЯ */
+.tabs{display:flex;gap:18px;border-bottom:1.5px dashed var(--line)}
+.tabs button{border:0;background:none;padding:8px 0;font:700 28px/1 var(--f-display);letter-spacing:.04em;color:var(--ink-soft);border-bottom:3px solid transparent;margin-bottom:-2px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--ink)}
+.list{display:flex;flex-direction:column;gap:10px}
+.row{display:grid;grid-template-columns:54px 1fr;gap:12px;align-items:start;padding:10px;border-radius:12px;animation:rise .35s both}
+.row.dark{background:var(--char);color:var(--chalk)}
+.row.light{background:var(--paper-2);border:1.5px solid var(--line)}
+.row .ic{width:54px;height:54px}
+.row .ic svg{width:100%;height:100%}
+.row p{margin:2px 0 0;font-size:18px;line-height:1.3}
+.row .mono{opacity:.7}
+
+/* ПРАВИЛА */
+.rules{display:flex;flex-direction:column;gap:14px}
+.rule-item{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start}
+.rule-item .n{width:44px;height:44px;display:grid;place-items:center;font:700 30px/1 var(--f-display);border:2px solid var(--ink);border-radius:50% 46% 52% 48%/48% 52% 46% 50%}
+.rule-item p{margin:6px 0 0;font-size:19px}
+.rule-item h3{margin:0;font:700 28px/1 var(--f-display);letter-spacing:.03em}
+.points{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pt{padding:12px;border-radius:12px;font-size:17px}
+.pt.l{background:var(--paper-2);border:1.5px solid var(--line)}
+.pt.d{background:var(--char);color:var(--chalk)}
+.pt b{display:block;font:700 30px/1 var(--f-display);letter-spacing:.03em;margin-bottom:4px}
+
+/* ФИНАЛ */
+.podium{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:8px}
+.podium .crown{width:120px;height:120px}
+.podium .winner{font:700 72px/.9 var(--f-display);text-align:center;animation:pop .6s cubic-bezier(.3,1.5,.5,1)}
+.titles{display:flex;flex-direction:column;gap:10px}
+.title-row{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center;padding:10px 12px;border-radius:12px;animation:rise .5s both}
+.title-row.l{background:var(--paper-2);border:1.5px solid var(--line)}
+.title-row.d{background:var(--char);color:var(--chalk)}
+.title-row svg{width:52px;height:52px}
+.title-row .t{font:700 26px/1 var(--f-display);letter-spacing:.03em}
+.title-row .n{font-size:19px}
+.title-row:nth-child(2){animation-delay:.12s}.title-row:nth-child(3){animation-delay:.24s}
+
+/* ДИАЛОГ */
+.sheet-bg{position:fixed;inset:0;z-index:30;background:rgba(23,22,21,.45);display:grid;align-items:end;animation:fade .25s}
+.sheet{background:var(--paper);max-width:460px;width:100%;margin:0 auto;padding:22px max(18px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));border-radius:22px 22px 0 0;display:flex;flex-direction:column;gap:14px;animation:sheet .35s cubic-bezier(.2,.9,.3,1)}
+.sheet p{margin:0;font-size:19px}
+
+/* анимации */
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+@keyframes fade{from{opacity:0}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes spin{to{rotate:360deg}}
+@keyframes twinkle{50%{opacity:.15;scale:.7}}
+@keyframes float-a{0%,100%{transform:rotate(-14deg) translate(-26px,0)}50%{transform:rotate(-11deg) translate(-26px,-6px)}}
+@keyframes float-b{0%,100%{transform:rotate(12deg) translate(26px,4px)}50%{transform:rotate(15deg) translate(26px,-3px)}}
+@keyframes stamp{from{opacity:0;transform:scale(2.4) rotate(-40deg)}}
+@keyframes mote{0%{opacity:0;transform:translateY(20px)}25%{opacity:.5}70%{opacity:.35}100%{opacity:0;transform:translateY(-60px)}}
+@keyframes pop{from{opacity:0;transform:scale(.6)}}
+@keyframes levitate{0%,100%{transform:translateY(0) rotate(-.6deg)}50%{transform:translateY(-5px) rotate(.6deg)}}
+@keyframes riffle-a{30%{transform:translate(-60%,-6px) rotate(-14deg)}60%{transform:translate(40%,-10px) rotate(10deg)}}
+@keyframes riffle-b{30%{transform:translate(55%,-4px) rotate(12deg)}60%{transform:translate(-45%,-8px) rotate(-9deg)}}
+@keyframes riffle-c{40%{transform:translateY(-14px) rotate(2deg)}}
+@keyframes fly-in{from{opacity:0;transform:translateY(-34vh) scale(.5) rotate(-12deg)}}
+@keyframes toss{to{opacity:0;transform:translate(-120vw,-10vh) rotate(-40deg)}}
+@keyframes toss-r{to{opacity:0;transform:translate(120vw,-10vh) rotate(40deg)}}
+@keyframes beckon{0%,70%,100%{translate:0}80%{translate:0 -5px}}
+@keyframes bump{40%{transform:scale(1.7);color:var(--seal)}}
+@keyframes toast{0%{opacity:0;transform:translateY(-10px)}10%,85%{opacity:1;transform:none}100%{opacity:0}}
+@keyframes plus{0%{opacity:0;transform:scale(.5)}20%{opacity:1;transform:scale(1.2)}100%{opacity:0;transform:translateY(-70px)}}
+@keyframes sheet{from{transform:translateY(40px);opacity:0}}
+/* в Telegram «назад» — системная кнопка в шапке */
+body.tg #back,body.tg #quit{visibility:hidden}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="r1"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="2"/><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter>
+    <filter id="r2"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter>
+    <filter id="r3"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="13"/><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter>
+    <path id="ring-path" d="M150 150 m-122 0 a122 122 0 1 1 244 0 a122 122 0 1 1 -244 0"/>
+    <path id="table-path" d="M200 200 m-178 0 a178 178 0 1 1 356 0 a178 178 0 1 1 -356 0"/>
+  </defs>
+</svg>
+
+<div class="paper" aria-hidden="true"></div>
+<main class="app" id="app"></main>
+
+<script>
+/* ---------------- КАРТЫ ---------------- */
+// t: q — вопрос, a — действие, all — всем, c — выбор. {p} — случайный другой игрок
+const DECK = {
+white: [
+ {t:'q',x:'Какой момент с этой компанией ты бы прожил ещё раз?'},
+ {t:'q',x:'Что в {p} зацепило тебя с первой встречи?'},
+ {t:'q',x:'За что ты можешь сказать спасибо каждому за столом? По одной фразе на человека.'},
+ {t:'q',x:'Кому из нас ты позвонишь в 3 ночи, если всё пойдёт не так?'},
+ {t:'q',x:'Какая черта {p} пригодилась бы тебе самому?'},
+ {t:'q',x:'Расскажи, как вы познакомились с {p}, так, как ты это помнишь.'},
+ {t:'q',x:'Какой комплимент ты услышал так давно, что помнишь его до сих пор?'},
+ {t:'q',x:'С кем из нас ты бы уехал в путешествие без плана и почему?'},
+ {t:'q',x:'Какую суперсилу ты бы выдал {p}?'},
+ {t:'q',x:'Какую песню ты бы посвятил этой компании? Можно напеть.'},
+ {t:'q',x:'Когда ты в последний раз гордился кем-то из нас?'},
+ {t:'q',x:'Что ты давно хотел сказать {p}, но не решался? Только хорошее.'},
+ {t:'q',x:'Какой поступок {p} тебя приятно удивил?'},
+ {t:'a',x:'Назови {p} три вещи, за которые ты ценишь этого человека.'},
+ {t:'a',x:'Сделай {p} самый искренний комплимент, какой сможешь. Без шуток.'},
+ {t:'a',x:'Обними того, кого считаешь самым милым за этим столом.'},
+ {t:'a',x:'Придумай {p} ласковое прозвище. Оно действует до конца игры.'},
+ {t:'a',x:'Напиши {p} тёплое сообщение прямо сейчас, хоть вы и сидите рядом.'},
+ {t:'a',x:'Расскажи историю, где {p} тебя выручил.'},
+ {t:'a',x:'Дай пять каждому и скажи каждому по одному доброму слову.'},
+ {t:'a',x:'Сделай комплимент внешности игрока слева и характеру игрока справа.'},
+ {t:'a',x:'Пообещай {p} одно маленькое доброе дело на этой неделе. Все — свидетели.'},
+ {t:'a',x:'Скажи тост за {p}. Минимум три предложения.'},
+ {t:'a',x:'Минута славы: 30 секунд перечисляй, почему {p} крутой человек.'},
+ {t:'a',x:'Подари {p} что-нибудь из своих карманов на память.'},
+ {t:'all',x:'По кругу: одно слово, которое лучше всего описывает эту компанию.'},
+ {t:'all',x:'Общее фото прямо сейчас. Самая смешная поза получает +1.'},
+ {t:'all',x:'Каждый называет лучшее качество игрока справа.'},
+ {t:'all',x:'На счёт три все показывают на самого доброго за столом. Он получает +1.'},
+ {t:'all',x:'По кругу: самое смешное общее воспоминание. Кто рассмешит всех — +1.'},
+ {t:'all',x:'Групповое объятие. Кто откажется, тянет чёрную карту.'},
+ {t:'all',x:'За 60 секунд придумайте название для вашей компании.'},
+ {t:'all',x:'Каждый рассказывает, чему научился у кого-то из присутствующих.'},
+ {t:'all',x:'Каждый говорит, кого из сидящих знает дольше всех и как всё началось.'},
+ {t:'c',x:'Выбери, с кем открыл бы общий бизнес. Объясни почему.'},
+ {t:'c',x:'Выбери, кто сегодня выглядит лучше всех. Скажи это, глядя в глаза.'},
+ {t:'c',x:'Выбери, кто понимает тебя лучше всех, и скажи ему спасибо.'},
+ {t:'c',x:'Выбери того, у кого самый заразительный смех. Пусть посмеётся.'},
+ {t:'c',x:'Выбери, кого взял бы на необитаемый остров и чем бы вы там занимались.'},
+ {t:'c',x:'Выбери самого надёжного за столом. Он следующим тянет карту вместо очереди.'},
+ {t:'c',x:'Выбери, с кем хочешь видеться чаще. Договоритесь о встрече прямо сейчас.'},
+ {t:'c',x:'Выбери, кто из нас станет самым классным родителем. Объясни.'},
+ {t:'c',x:'Выбери, кому доверил бы ключи от своей квартиры на месяц.'},
+ {t:'c',x:'Выбери, с кем из нас было бы не страшно в любой передряге.'}
+],
+black: [
+ {t:'q',x:'Кто из нас чаще всех опаздывает и что ты об этом думаешь?'},
+ {t:'q',x:'Что тебя раздражает в {p}? Честно, но без оскорблений.'},
+ {t:'q',x:'Чей стиль в одежде за этим столом ты бы поменял первым?'},
+ {t:'q',x:'Кому из нас ты бы не доверил свой секрет?'},
+ {t:'q',x:'О ком из нас ты сплетничал последним и что говорил?'},
+ {t:'q',x:'Какое первое впечатление о {p} оказалось ошибкой?'},
+ {t:'q',x:'Кто из нас самый большой зануда? Приведи пример.'},
+ {t:'q',x:'Кто из нас хуже всех выбирает себе партнёров?'},
+ {t:'q',x:'Кого бы ты исключил из компании на месяц, будь у тебя такая власть?'},
+ {t:'q',x:'Какую привычку {p} ты бы запретил законом?'},
+ {t:'q',x:'Что ты на самом деле думаешь о подарке, который {p} дарил тебе последним?'},
+ {t:'q',x:'В чём ты лучше, чем {p}? Назови три вещи.'},
+ {t:'q',x:'Что ты на самом деле думаешь о партнёре {p}? Если его нет — о бывшем.'},
+ {t:'a',x:'Дай {p} честный совет, который этот человек точно не хочет слышать.'},
+ {t:'a',x:'Покажи всем последние 5 фото в галерее.'},
+ {t:'a',x:'Спародируй {p} так, чтобы все узнали. Не жалей.'},
+ {t:'a',x:'Прочитай вслух последнее сообщение, которое ты отправил.'},
+ {t:'a',x:'{p} выбирает контакт в твоём телефоне. Позвони и скажи, что скучаешь.'},
+ {t:'a',x:'Поставь на аватарку фото, которое выберет {p}. На час.'},
+ {t:'a',x:'Расскажи про {p} забавную историю, которую этот человек просил не рассказывать.'},
+ {t:'a',x:'Прожарка: 30 секунд подкалывай {p}. Потом {p} отвечает тем же.'},
+ {t:'a',x:'Отдай {p} свой телефон с открытой галереей на одну минуту.'},
+ {t:'a',x:'Покажи историю поиска в браузере за сегодня.'},
+ {t:'a',x:'Повтори любимую фразу {p} голосом, который этот человек выберет.'},
+ {t:'a',x:'Назови игрока, который сегодня больше всех старается понравиться.'},
+ {t:'all',x:'На счёт три все показывают на самого скучного. Он тянет ещё одну чёрную.'},
+ {t:'all',x:'По кругу: каждый называет худшую привычку игрока справа.'},
+ {t:'all',x:'Голосование: кто первым пропадёт из компании ради отношений?'},
+ {t:'all',x:'На счёт три все показывают на того, кто чаще всех выбалтывает чужие секреты.'},
+ {t:'all',x:'Голосование: кто самый эгоистичный за столом? Победитель теряет 1 очко.'},
+ {t:'all',x:'«Я никогда не…» — ведёт {p}. Кто это делал, теряет 1 очко.'},
+ {t:'all',x:'Голосование: кто чаще всех даёт ужасные советы?'},
+ {t:'all',x:'Каждый признаётся, на кого из присутствующих хоть раз обижался.'},
+ {t:'all',x:'Все пишут имя самого раздражающего игрока на бумажке. {p} читает вслух.'},
+ {t:'c',x:'Выбери, кто из нас дольше всех останется одиноким. Объясни.'},
+ {t:'c',x:'Выбери, кому бы ты не одолжил деньги. Почему?'},
+ {t:'c',x:'Выбери самого фальшивого за столом. Приведи пример.'},
+ {t:'c',x:'Выбери, с кем из компании ты бы никогда не стал жить вместе.'},
+ {t:'c',x:'Выбери, кто первым сдался бы в зомби-апокалипсисе. Опиши в красках.'},
+ {t:'c',x:'Выбери, кто из нас хвастается больше всех.'},
+ {t:'c',x:'Выбери, чей бывший был самым неудачным выбором.'},
+ {t:'c',x:'Выбери, кто сильнее всех изменился за год. И не в лучшую сторону.'},
+ {t:'c',x:'Выбери, кто из нас хуже всех хранит обещания.'},
+ {t:'c',x:'Выбери, чьё мнение ты обычно пропускаешь мимо ушей.'}
+]};
+const TYPE = {q:'Вопрос', a:'Действие', all:'Всем', c:'Выбор'};
+const ART = {white:{q:'sun',a:'heart',all:'fire',c:'flower'}, black:{q:'eye',a:'bolt',all:'bomb',c:'snake'}};
+const ROMAN = n => {const r=[['L',50],['XL',40],['X',10],['IX',9],['V',5],['IV',4],['I',1]];let s='';for(const[k,v]of r)while(n>=v){s+=k;n-=v}return s};
+
+/* ---------------- РИСУНКИ ---------------- */
+function rays(cx,cy,r1,r2,n,offset=0){let d='';for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2+offset;d+=`M${(cx+Math.cos(a)*r1).toFixed(1)} ${(cy+Math.sin(a)*r1).toFixed(1)}L${(cx+Math.cos(a)*r2).toFixed(1)} ${(cy+Math.sin(a)*r2).toFixed(1)}`}return d}
+const DOODLE = {
+ sun:`<circle cx="50" cy="50" r="16"/><path d="${rays(50,50,23,33,12)}"/><path d="${rays(50,50,25,29,12,Math.PI/12)}" style="stroke-width:1.6"/><path d="M43 53q7 6 14 0"/><circle class="fill" cx="44" cy="46" r="1.8"/><circle class="fill" cx="56" cy="46" r="1.8"/>`,
+ heart:`<path d="M50 80C22 61 17 35 34 29c9-3 15 3 16 10 1-7 7-13 16-10 17 6 12 32-16 51z"/><path d="M36 38q-4 4-3 11" style="stroke-width:1.6"/><path d="M18 22l5 4M82 22l-5 4M50 12v7M14 52h6M80 52h6" style="stroke-width:2"/>`,
+ fire:`<path d="M26 82l48-14M26 68l48 14"/><path d="M50 72C34 64 38 46 47 33c2 10 8 10 9 3 9 10 10 28-6 36z"/><path d="M50 67c-5-3-5-10 0-16 2 6 5 8 0 16z"/><path d="M32 30l2 4M70 26l-2 5M60 16l-1 4" style="stroke-width:1.8"/>`,
+ flower:`<circle cx="50" cy="38" r="7"/><path d="M50 31c-6-12 6-16 0 0M57 38c12-6 16 6 0 0M50 45c6 12-6 16 0 0M43 38c-12 6-16-6 0 0M55 33c8-10 16 0 0 0M45 43c-8 10-16 0 0 0M55 43c10 8 0 16 0 0M45 33c-10-8 0-16 0 0"/><path d="M50 46q-3 22 0 40"/><path d="M50 72q10-12 18-8-6 10-18 9zM50 62q-9-9-16-5 6 8 16 6z"/>`,
+ eye:`<path d="M14 50q36-34 72 0-36 34-72 0z"/><circle cx="50" cy="50" r="11"/><circle class="fill" cx="50" cy="50" r="4.5"/><path d="M50 22v-8M33 27l-4-7M67 27l4-7M22 37l-6-5M78 37l6-5"/><path d="M28 70q22 12 44 0" style="stroke-width:1.6"/>`,
+ bolt:`<path d="M57 10L30 54h18l-9 36 33-48H53l11-32z"/><path d="M22 26l6 3M78 66l-6-2M76 24l-5 4M24 74l5-4" style="stroke-width:1.8"/>`,
+ bomb:`<circle cx="45" cy="60" r="23"/><path d="M58 42l6-7 6 5-6 7"/><path d="M67 37q3-12 13-12"/><path d="M80 25l4-6M80 25l7 1M80 25l1 7M80 25l-6-3" style="stroke-width:2"/><path d="M33 50q4-7 11-8" style="stroke-width:1.8"/>`,
+ snake:`<path d="M24 86c-12-10 4-22 22-18s34-4 26-18-34-6-36-20 18-18 26-12"/><path d="M62 18c6-3 12 0 12 5s-6 7-12 5"/><circle class="fill" cx="67" cy="21" r="1.6"/><path d="M74 24l7 2m-7-2l6 5"/><path d="M38 72l4 4M52 66l2 5M60 46l4-3M44 40l-2-5" style="stroke-width:1.5"/>`,
+ crown:`<path d="M20 70l-4-38 20 18 14-26 14 26 20-18-4 38z"/><path d="M22 80h56"/><circle cx="50" cy="56" r="5"/><circle class="fill" cx="16" cy="30" r="3"/><circle class="fill" cx="84" cy="30" r="3"/><circle class="fill" cx="50" cy="22" r="3"/>`,
+ hand:`<path d="M38 88V52l-10-12c-4-5 2-10 6-6l6 6V20c0-5 7-5 7 0v22-28c0-5 7-5 7 0v28-24c0-5 7-5 7 0v26-18c0-5 7-5 7 0v34c0 14-6 22-12 28"/><path d="M20 20l5 4M82 20l-5 4" style="stroke-width:1.8"/>`,
+ ghost:`<path d="M28 84V44c0-14 10-24 22-24s22 10 22 24v40l-7-6-8 6-7-6-7 6-8-6z"/><circle class="fill" cx="42" cy="46" r="3"/><circle class="fill" cx="58" cy="46" r="3"/><path d="M45 60q5-4 10 0"/>`
+};
+const ink = (name, cls='') => `<svg class="ink ${cls}" viewBox="0 0 100 100" aria-hidden="true"><g class="boil">${DOODLE[name]}</g></svg>`;
+
+const frame = () => `<svg class="frame" viewBox="0 0 100 150" preserveAspectRatio="none" aria-hidden="true"><g class="boil"><rect x="4.5" y="3.5" width="91" height="143" rx="6" vector-effect="non-scaling-stroke"/><rect x="7" y="5.5" width="86" height="139" rx="4" vector-effect="non-scaling-stroke" style="stroke-width:.8;opacity:.6"/></g></svg>`;
+
+function backHTML(kind){
+  if(kind==='mix') return `<div class="back-mix">${backHTML('white')}<div class="face back black half-b">${backInner('black')}</div><svg class="split" viewBox="0 0 100 150" preserveAspectRatio="none"><path d="M100 0L0 150" stroke="#171615" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg></div>`;
+  return `<div class="face back ${kind}">${backInner(kind)}</div>`;
+}
+function backInner(kind){
+  const w = kind==='white';
+  const emblem = w
+   ? `<svg class="ink" viewBox="0 0 100 100"><g class="boil"><circle cx="50" cy="50" r="44"/><circle cx="50" cy="50" r="38" style="stroke-width:1.2"/><path d="${rays(50,50,24,33,16)}" style="stroke-width:1.6"/><path d="M50 66C36 57 34 44 42 41c4-1 7 1 8 5 1-4 4-6 8-5 8 3 6 16-8 25z"/></g></svg>`
+   : `<svg class="ink" viewBox="0 0 100 100"><g class="boil"><circle cx="50" cy="50" r="44"/><circle cx="50" cy="50" r="38" style="stroke-width:1.2;stroke-dasharray:2 4"/><path d="M60 22a30 30 0 1 0 0 56 24 24 0 1 1 0-56z"/><path d="M53 36L44 52h7l-4 13 11-17h-7l4-12z"/></g></svg>`;
+  return `${frame()}<div class="word t">ЗАКЛЯТЫЕ</div><div class="emblem">${emblem}</div><div class="word">${w?'КЛЯТВА':'ПРОКЛЯТИЕ'}</div>`;
+}
+function faceHTML(deck, idx){
+  const c = DECK[deck][idx];
+  return `<div class="face ${deck} front">${frame()}<div class="face-in">
+    <div class="top"><span>${deck==='white'?'клятва':'проклятие'}</span><span>${ROMAN(idx+1)}</span></div>
+    <div class="art">${ink(ART[deck][c.t])}</div>
+    <div class="center"><div class="ttl">${TYPE[c.t]}</div><div class="sub">${deck==='white'?'+1 ОЧКО':'+2 ОЧКА'}</div></div>
+  </div></div>`;
+}
+
+/* ---------------- СОСТОЯНИЕ ---------------- */
+const store = {
+  get(k,d){try{const v=localStorage.getItem('zk_'+k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem('zk_'+k,JSON.stringify(v))}catch(e){}}
+};
+const MODES = {
+  peace:{name:'Мир',desc:'Только белая колода. Тёплый вечер: признания, комплименты и объятия.'},
+  mix:{name:'Смесь',desc:'Обе колоды перемешаны в одну. Никто не знает, что вытянет: клятву или проклятие.'},
+  choice:{name:'Выбор',desc:'Обе колоды на столе. Каждый сам решает, рискнуть чёрной или сыграть белой.'},
+  war:{name:'Война',desc:'Только чёрная колода. Неудобные вопросы и задания, которые понравятся не всем.'}
+};
+const S = {
+  players: store.get('players', ['Аня','Макс','Лиза']),
+  mode: store.get('mode','mix'),
+  target: store.get('target',10),
+  sound: store.get('sound',true),
+  game:null
+};
+let app = document.getElementById('app');
+
+/* ---------------- TELEGRAM ---------------- */
+// Внутри Telegram подключается telegram-web-app.js; в обычном браузере tg = null и всё работает как раньше
+const tg = (window.Telegram && Telegram.WebApp && Telegram.WebApp.platform !== 'unknown') ? Telegram.WebApp : null;
+if(tg){
+  document.body.classList.add('tg');
+  tg.ready(); tg.expand();
+  try{tg.setHeaderColor('#ecebe5');tg.setBackgroundColor('#ecebe5');tg.setBottomBarColor&&tg.setBottomBarColor('#ecebe5')}catch(e){}
+  try{tg.disableVerticalSwipes&&tg.disableVerticalSwipes()}catch(e){}
+  const me = tg.initDataUnsafe && tg.initDataUnsafe.user;
+  if(me && me.first_name && !store.get('players',null)) S.players = [me.first_name.slice(0,16),'Макс','Лиза'];
+}
+let backFn = null;
+function setBack(fn){
+  if(!tg) return;
+  if(backFn) tg.BackButton.offClick(backFn);
+  backFn = fn;
+  if(fn){tg.BackButton.onClick(fn);tg.BackButton.show()} else tg.BackButton.hide();
+}
+function haptic(kind){
+  if(!tg||!tg.HapticFeedback) return;
+  try{
+    if(kind==='win') tg.HapticFeedback.notificationOccurred('success');
+    else if(kind==='warn') tg.HapticFeedback.notificationOccurred('warning');
+    else tg.HapticFeedback.impactOccurred(kind==='shuffle'?'medium':kind==='flip'?'rigid':'light');
+  }catch(e){}
+}
+function guardClose(on){if(tg)try{on?tg.enableClosingConfirmation():tg.disableClosingConfirmation()}catch(e){}}
+
+/* ---------------- ЗВУК ---------------- */
+let actx;
+function sfx(kind){
+  haptic(kind);
+  if(!S.sound) return;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const t = actx.currentTime;
+    if(kind==='tap'){
+      const o=actx.createOscillator(),g=actx.createGain();o.type='triangle';o.frequency.setValueAtTime(520,t);o.frequency.exponentialRampToValueAtTime(260,t+.08);
+      g.gain.setValueAtTime(.08,t);g.gain.exponentialRampToValueAtTime(.001,t+.1);o.connect(g).connect(actx.destination);o.start(t);o.stop(t+.12);return;
+    }
+    const dur = kind==='shuffle'?.9:.28;
+    const buf=actx.createBuffer(1,actx.sampleRate*dur,actx.sampleRate),d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++){const p=i/d.length;const env=kind==='shuffle'?Math.abs(Math.sin(p*Math.PI*7))*(1-p):Math.pow(1-p,2.5);d[i]=(Math.random()*2-1)*env}
+    const src=actx.createBufferSource();src.buffer=buf;const f=actx.createBiquadFilter();f.type='bandpass';f.frequency.value=kind==='flip'?2600:1800;f.Q.value=.8;
+    const g=actx.createGain();g.gain.value=kind==='shuffle'?.18:.3;src.connect(f).connect(g).connect(actx.destination);src.start(t);
+    if(kind==='win'){[523,659,784].forEach((fr,i)=>{const o=actx.createOscillator(),gg=actx.createGain();o.frequency.value=fr;gg.gain.setValueAtTime(.0001,t+i*.12);gg.gain.exponentialRampToValueAtTime(.08,t+i*.12+.02);gg.gain.exponentialRampToValueAtTime(.0001,t+i*.12+.5);o.connect(gg).connect(actx.destination);o.start(t+i*.12);o.stop(t+i*.12+.55)})}
+  }catch(e){}
+}
+const soundIcon = () => `<svg class="ink" viewBox="0 0 100 100"><g class="boil"><path d="M20 40h14l18-16v52L34 60H20z"/>${S.sound?'<path d="M64 36q8 14 0 28M74 28q14 22 0 44"/>':'<path d="M64 38l20 24M84 38L64 62"/>'}</g></svg>`;
+const backIcon = `<svg class="ink" viewBox="0 0 100 100"><g class="boil"><path d="M80 50H22M42 28L20 50l22 22"/></g></svg>`;
+function toggleSound(btn){S.sound=!S.sound;store.set('sound',S.sound);btn.innerHTML=soundIcon();sfx('tap')}
+
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500)}
+function floatPlus(txt,el){const r=el.getBoundingClientRect();const p=document.createElement('div');p.className='plus';p.textContent=txt;p.style.left=(r.left+r.width/2-16)+'px';p.style.top=(r.top-10)+'px';document.body.appendChild(p);setTimeout(()=>p.remove(),1000)}
+const esc = s => s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shuffle = a => {for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+/* ---------------- ЭКРАН: ГЛАВНЫЙ ---------------- */
+function home(){
+  const motes = Array.from({length:14},(_,i)=>`<i style="left:${(i*37)%100}%;top:${30+(i*23)%60}%;animation-delay:${(i*.45).toFixed(2)}s;animation-duration:${5+i%4}s"></i>`).join('');
+  app.innerHTML = `<section class="screen">
+    <div class="topbar"><span></span><span class="mono muted">игра для своих</span><button class="icon-btn" id="snd" aria-label="Звук">${soundIcon()}</button></div>
+    <div class="hero">
+      <div class="motes">${motes}</div>
+      <svg viewBox="0 0 300 300" class="ink" aria-hidden="true">
+        <g class="boil">
+          <circle class="ring" cx="150" cy="150" r="138"/>
+          <g class="rays"><path d="${rays(150,150,84,108,36)}" style="stroke-width:1.4;opacity:.55"/></g>
+          <text font-family="JetBrains Mono, monospace" font-size="9.5" letter-spacing="3.2" fill="currentColor" stroke="none" style="opacity:.75"><textPath href="#ring-path">КЛЯНУСЬ БЫТЬ ЧЕСТНЫМ · ДАЖЕ ЕСЛИ БУДЕТ БОЛЬНО · КЛЯНУСЬ БЫТЬ ЧЕСТНЫМ ·</textPath></text>
+          <g class="c-white"><rect x="102" y="84" width="96" height="144" rx="10" style="fill:#f7f6f2"/><rect x="108" y="90" width="84" height="132" rx="7" style="stroke-width:1.2"/><g transform="translate(110 112) scale(.8)">${DOODLE.heart}</g></g>
+          <g class="c-black" style="color:#efeee8"><rect x="102" y="84" width="96" height="144" rx="10" style="fill:#1b1a19;stroke:#171615"/><rect x="108" y="90" width="84" height="132" rx="7" style="stroke-width:1.2"/><g transform="translate(110 112) scale(.8)">${DOODLE.bolt}</g></g>
+          <path class="spark" d="M48 70l4 8 8 4-8 4-4 8-4-8-8-4 8-4z" style="stroke-width:1.8"/>
+          <path class="spark" d="M250 58l3 6 6 3-6 3-3 6-3-6-6-3 6-3z" style="stroke-width:1.8"/>
+          <path class="spark" d="M262 220l3 6 6 3-6 3-3 6-3-6-6-3 6-3z" style="stroke-width:1.8"/>
+          <circle class="spark fill" cx="40" cy="214" r="3"/>
+        </g>
+      </svg>
+      <svg class="seal-mark" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 6c9 0 12 6 20 8s14 4 16 12-2 14 0 22 6 14 0 22-14 6-20 12-11 12-20 12-12-8-20-10-14-6-16-14 2-14-2-22-6-14 0-22 14-6 20-12S41 6 50 6z" fill="#a8281f"/><circle cx="50" cy="50" r="27" fill="none" stroke="#7d1b14" stroke-width="2.5"/><text x="50" y="62" text-anchor="middle" font-family="Amatic SC, cursive" font-weight="700" font-size="40" fill="#f2d9d2">З</text></svg>
+    </div>
+    <h1 class="display">Заклятые</h1>
+    <p class="lead">Две колоды на одну компанию. Белая сплачивает, чёрная проверяет дружбу на прочность.</p>
+    <div class="spacer"></div>
+    <div class="stack">
+      <button class="btn solid" id="play"><span>Играть</span></button>
+      <div class="btn-row">
+        <button class="btn" id="coll"><span>Колоды</span></button>
+        <button class="btn" id="rules"><span>Правила</span></button>
+      </div>
+    </div>
+  </section>`;
+  setBack(null); guardClose(false);
+  $('#snd').onclick = e => toggleSound(e.currentTarget);
+  $('#play').onclick = () => {sfx('tap');setup()};
+  $('#coll').onclick = () => {sfx('tap');collection('white')};
+  $('#rules').onclick = () => {sfx('tap');rules()};
+}
+const $ = s => app.querySelector(s);
+
+/* ---------------- ЭКРАН: НАСТРОЙКА ---------------- */
+function modeArt(m){
+  if(m==='peace') return `<div class="mini">${ink('sun')}</div>`;
+  if(m==='war') return `<div class="mini dark">${ink('bolt')}</div>`;
+  if(m==='mix') return `<div class="mini" style="background:linear-gradient(135deg,var(--paper-2) 50%,var(--char) 50%)"><svg class="ink" viewBox="0 0 100 100"><g class="boil"><g transform="translate(6 6) scale(.5)">${DOODLE.heart}</g><g transform="translate(46 46) scale(.5)" style="color:#efeee8">${DOODLE.bolt}</g></g></svg></div>`;
+  return `<div class="mini"><svg class="ink" viewBox="0 0 100 100"><g class="boil"><rect x="14" y="22" width="34" height="52" rx="5" style="fill:#f7f6f2" transform="rotate(-10 31 48)"/><rect x="52" y="22" width="34" height="52" rx="5" style="fill:#1b1a19" transform="rotate(10 69 48)"/></g></svg></div>`;
+}
+const tick = `<svg class="tick" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="#a8281f"/><path d="M30 52l13 13 27-30" fill="none" stroke="#f2d9d2" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+function setup(){
+  app.innerHTML = `<section class="screen">
+    <div class="topbar"><button class="icon-btn" id="back" aria-label="Назад">${backIcon}</button><span class="mono">Новая партия</span><span></span></div>
+    <div class="stack">
+      <div class="label"><h2 class="h2">Кто играет</h2><span class="mono muted" id="pc"></span></div>
+      <div class="players" id="pl"></div>
+      <form class="add-row" id="addf"><input id="name-in" maxlength="16" placeholder="Имя игрока" autocomplete="off"><button class="btn solid" type="submit"><span>Добавить</span></button></form>
+    </div>
+    <div class="stack">
+      <div class="label"><h2 class="h2">Режим</h2><span class="mono muted">как смешать колоды</span></div>
+      <div class="modes" id="modes">${Object.keys(MODES).map(m=>`<button class="mode" data-m="${m}" aria-pressed="${S.mode===m}"><div class="mode-wrap">${modeArt(m)}${tick}</div><span class="name">${MODES[m].name}</span></button>`).join('')}</div>
+      <p class="mode-desc" id="md">${MODES[S.mode].desc}</p>
+    </div>
+    <div class="stack">
+      <div class="label"><h2 class="h2">До скольких очков</h2></div>
+      <div class="seg" id="seg">${[7,10,15].map(n=>`<button data-n="${n}" aria-pressed="${S.target===n}">${n}</button>`).join('')}</div>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn solid" id="go"><span>Разложить карты</span></button>
+  </section>`;
+  const renderPl = () => {
+    $('#pl').innerHTML = S.players.map((p,i)=>`<span class="chip">${esc(p)}<button data-i="${i}" aria-label="Убрать ${esc(p)}">×</button></span>`).join('');
+    $('#pc').textContent = S.players.length<2 ? 'нужно минимум двое' : S.players.length+' игрок'+(S.players.length<5?'а':'ов');
+    $('#go').disabled = S.players.length<2;
+    $('#pl').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.players.splice(+b.dataset.i,1);store.set('players',S.players);sfx('tap');renderPl()});
+  };
+  renderPl();
+  $('#addf').onsubmit = e => {e.preventDefault();const v=$('#name-in').value.trim();if(!v)return;if(S.players.includes(v)){toast('Такое имя уже есть');return}if(S.players.length>=12){toast('Максимум 12 игроков');return}S.players.push(v);store.set('players',S.players);$('#name-in').value='';sfx('tap');renderPl()};
+  $('#modes').querySelectorAll('.mode').forEach(b=>b.onclick=()=>{S.mode=b.dataset.m;store.set('mode',S.mode);sfx('flip');$('#modes').querySelectorAll('.mode').forEach(x=>x.setAttribute('aria-pressed',x===b));const md=$('#md');md.textContent=MODES[S.mode].desc;md.style.animation='none';md.offsetHeight;md.style.animation=''});
+  $('#seg').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.target=+b.dataset.n;store.set('target',S.target);sfx('tap');$('#seg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+  $('#back').onclick = () => {sfx('tap');home()};
+  setBack(() => {sfx('tap');home()});
+  $('#go').onclick = () => {sfx('shuffle');startGame()};
+}
+
+/* ---------------- ИГРА ---------------- */
+function startGame(){
+  S.game = {
+    players: S.players.map(n=>({name:n,pts:0,w:0,b:0,r:0})),
+    turn: 0, round: 1,
+    piles: {white:shuffle([...DECK.white.keys()]), black:shuffle([...DECK.black.keys()])},
+    mixPile: null, current:null, forced:false
+  };
+  if(S.mode==='mix') S.game.mixPile = shuffle([...DECK.white.keys()].map(i=>['white',i]).concat([...DECK.black.keys()].map(i=>['black',i])));
+  game();
+}
+function drawFrom(deck){
+  const g=S.game;
+  if(deck==='mix'){ if(!g.mixPile.length) g.mixPile = shuffle([...DECK.white.keys()].map(i=>['white',i]).concat([...DECK.black.keys()].map(i=>['black',i]))); return g.mixPile.pop(); }
+  if(!g.piles[deck].length) g.piles[deck]=shuffle([...DECK[deck].keys()]);
+  return [deck, g.piles[deck].pop()];
+}
+function deckList(){
+  if(S.game.forced) return ['black'];
+  return {peace:['white'],war:['black'],mix:['mix'],choice:['white','black']}[S.mode];
+}
+function pileCount(k){const g=S.game;return k==='mix'?g.mixPile.length:g.piles[k].length}
+function game(){
+  const g=S.game, me=g.players[g.turn];
+  const decks = deckList();
+  app.innerHTML = `<section class="screen">
+    <div class="topbar"><button class="icon-btn" id="quit" aria-label="Закончить игру">${backIcon}</button><span class="mono">Круг ${g.round} · до ${S.target}</span><button class="icon-btn" id="snd" aria-label="Звук">${soundIcon()}</button></div>
+    <div class="scores" id="scores"></div>
+    <div class="turn"><span class="mono muted">${g.forced?'отказ — тянешь проклятие':'сейчас ходит'}</span><div class="who" id="who">${esc(me.name)}</div></div>
+    <div class="table" id="table">
+      <svg class="circle ink" viewBox="0 0 400 400" aria-hidden="true"><g class="boil">
+        <circle class="draw" cx="200" cy="200" r="190" style="stroke-width:1.6"/>
+        <circle class="draw" cx="200" cy="200" r="166" style="stroke-width:1;animation-delay:.3s"/>
+        <g class="orbit"><text font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="4" fill="currentColor" stroke="none" opacity=".55"><textPath href="#table-path">ЧТО СКАЗАНО ЗА СТОЛОМ · ОСТАЁТСЯ ЗА СТОЛОМ · ЧТО СКАЗАНО ЗА СТОЛОМ · ОСТАЁТСЯ ·</textPath></text>
+        <path d="M200 6l4 8-4 8-4-8z" class="fill"/><path d="M200 378l4 8-4 8-4-8z" class="fill"/><path d="M6 200l8-4 8 4-8 4z" class="fill"/><path d="M378 200l8-4 8 4-8 4z" class="fill"/></g>
+      </g></svg>
+      <div class="decks ${decks.length===1?'one':''}" id="decks">
+        ${decks.map(k=>`<button class="deck" data-k="${k}" aria-label="Тянуть карту: ${k==='white'?'клятва':k==='black'?'проклятие':'смешанная колода'}"><div class="pile">${backHTML(k)}${backHTML(k)}${backHTML(k)}</div><span class="lbl">${k==='white'?'Клятва':k==='black'?'Проклятие':'Смесь'}</span><span class="cnt">${pileCount(k)} карт</span></button>`).join('')}
+      </div>
+      <div class="drawn" id="drawn"></div>
+    </div>
+    <div id="bottom"><p class="hint">коснись колоды</p></div>
+  </section>`;
+  renderScores();
+  setBack(confirmQuit); guardClose(true);
+  $('#snd').onclick = e => toggleSound(e.currentTarget);
+  $('#quit').onclick = confirmQuit;
+  app.querySelectorAll('.deck').forEach(d=>d.onclick=()=>pick(d));
+}
+function renderScores(bumpIdx){
+  const g=S.game;
+  $('#scores').innerHTML = g.players.map((p,i)=>`<span class="score ${i===g.turn?'on':''} ${i===bumpIdx?'bump':''}">${esc(p.name)}<b>${p.pts}</b></span>`).join('');
+  const on=$('#scores .on'); if(on) on.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
+}
+function pick(deckBtn){
+  const g=S.game; if(g.current) return;
+  const k=deckBtn.dataset.k;
+  const [deck,idx]=drawFrom(k);
+  g.current={deck,idx,from:k};
+  deckBtn.classList.add('shuffle');sfx('shuffle');
+  app.querySelectorAll('.deck').forEach(d=>d.disabled=true);
+  $('#bottom').innerHTML='<p class="hint" style="animation:none">тасую…</p>';
+  setTimeout(()=>{
+    $('#decks').classList.add('away');
+    $('#drawn').innerHTML = `<div class="flip" id="flip" role="button" tabindex="0" aria-label="Перевернуть карту"><div class="card3d">${k==='mix'?`<div class="face" style="box-shadow:none;background:none">${backHTML('mix')}</div>`:backHTML(deck)}${faceHTML(deck,idx)}</div></div>`;
+    $('#bottom').innerHTML='<p class="hint">переверни карту</p>';
+    const f=$('#flip');
+    const open=()=>{if(f.classList.contains('open'))return;f.classList.add('open');sfx('flip');setTimeout(()=>reveal(),380)};
+    f.onclick=open; f.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}};
+    setTimeout(open,1100);
+  },850);
+}
+function others(){const g=S.game;return g.players.filter((_,i)=>i!==g.turn).map(p=>p.name)}
+function fill(text){
+  const pool = shuffle(others());
+  return esc(text).replace(/\{p\}/g, () => `<b>${esc(pool[0]||'сосед')}</b>`);
+}
+function reveal(){
+  const g=S.game,c=g.current,card=DECK[c.deck][c.idx];
+  const w=c.deck==='white';
+  const refuseRule = w ? 'Отказ: вместо этой карты тянешь проклятие.' : 'Отказ: минус 1 очко.';
+  $('#bottom').innerHTML = `<div class="reading">
+      <div class="meta"><span class="mono">${w?'Клятва':'Проклятие'} · ${TYPE[card.t]}</span><span class="mono muted">${ROMAN(c.idx+1)} · ${w?'+1':'+2'}</span></div>
+      <p class="text">${fill(card.x)}</p>
+      <p class="rule">${refuseRule}</p>
+    </div>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn" id="no"><span>Отказываюсь</span></button>
+      <button class="btn ${w?'solid':'seal'}" id="yes"><span>Сделано ${w?'+1':'+2'}</span></button>
+    </div>`;
+  $('#yes').onclick = e => resolve(true,e.currentTarget);
+  $('#no').onclick = e => resolve(false,e.currentTarget);
+}
+function resolve(done,btn){
+  const g=S.game,c=g.current,me=g.players[g.turn],w=c.deck==='white';
+  let next=true;
+  if(done){const add=w?1:2;me.pts+=add;w?me.w++:me.b++;floatPlus('+'+add,btn);sfx('tap')}
+  else{
+    me.r++;
+    if(w){g.forced=true;next=false;toast('Отказ от клятвы. Тяни проклятие')}
+    else{me.pts=Math.max(0,me.pts-1);floatPlus('−1',btn);toast('Отказ: минус очко');haptic('warn')}
+  }
+  if(done||!w) g.forced=false;
+  const f=$('#flip'); f.classList.add(done?'toss-r':'toss'); sfx('flip');
+  app.querySelectorAll('#bottom button').forEach(b=>b.disabled=true);
+  const winner = g.players.find(p=>p.pts>=S.target);
+  setTimeout(()=>{
+    g.current=null;
+    if(winner){finish();return}
+    if(next){g.turn=(g.turn+1)%g.players.length;if(g.turn===0)g.round++}
+    game();
+    renderScores(done ? g.players.indexOf(me) : undefined);
+  },560);
+}
+function confirmQuit(){
+  const open=document.querySelector('.sheet-bg'); if(open){open.remove();return}
+  sfx('tap');
+  const bg=document.createElement('div');bg.className='sheet-bg';
+  bg.innerHTML=`<div class="sheet" role="dialog" aria-label="Закончить игру"><h2 class="h2">Закончить партию?</h2><p>Посчитаем очки и раздадим титулы тем, кто сейчас за столом.</p><div class="btn-row"><button class="btn" id="stay"><span>Играть дальше</span></button><button class="btn solid" id="end"><span>Подвести итоги</span></button></div></div>`;
+  document.body.appendChild(bg);
+  bg.onclick=e=>{if(e.target===bg)bg.remove()};
+  bg.querySelector('#stay').onclick=()=>bg.remove();
+  bg.querySelector('#end').onclick=()=>{bg.remove();finish()};
+}
+
+/* ---------------- ФИНАЛ ---------------- */
+function finish(){
+  const ps=[...S.game.players];
+  const top = ps.slice().sort((a,b)=>b.pts-a.pts)[0];
+  const best = (key)=>{const m=Math.max(...ps.map(p=>p[key]));return m>0?ps.filter(p=>p[key]===m).map(p=>p.name).join(', '):'—'};
+  sfx('win'); setBack(null); guardClose(false);
+  app.innerHTML = `<section class="screen">
+    <div class="topbar"><span></span><span class="mono">Итоги · круг ${S.game.round}</span><span></span></div>
+    <div class="podium">
+      <div class="crown">${ink('crown')}</div>
+      <span class="mono muted">${top.pts>0?'побеждает':'ничья, никто не набрал очков'}</span>
+      <div class="winner">${top.pts>0?esc(top.name):'Все'}</div>
+      <span class="mono">${top.pts} очк.</span>
+    </div>
+    <div class="titles">
+      <div class="title-row l">${ink('heart')}<div><div class="t">Душа компании</div><div class="n">${esc(best('w'))}</div></div><span class="mono">клятвы</span></div>
+      <div class="title-row d">${ink('snake')}<div><div class="t">Заклятый</div><div class="n">${esc(best('b'))}</div></div><span class="mono">проклятия</span></div>
+      <div class="title-row l">${ink('ghost')}<div><div class="t">Трус вечера</div><div class="n">${esc(best('r'))}</div></div><span class="mono">отказы</span></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="stack"><button class="btn solid" id="again"><span>Ещё партия</span></button><button class="btn" id="home"><span>На главную</span></button></div>
+  </section>`;
+  $('#again').onclick=()=>{sfx('shuffle');startGame()};
+  $('#home').onclick=()=>{sfx('tap');home()};
+}
+
+/* ---------------- КОЛЛЕКЦИЯ ---------------- */
+function collection(deck){
+  app.innerHTML = `<section class="screen">
+    <div class="topbar"><button class="icon-btn" id="back" aria-label="Назад">${backIcon}</button><span class="mono">Колоды</span><span class="mono muted" style="text-align:right">${DECK.white.length+DECK.black.length}</span></div>
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="${deck==='white'}" data-d="white">Клятва · ${DECK.white.length}</button>
+      <button role="tab" aria-selected="${deck==='black'}" data-d="black">Проклятие · ${DECK.black.length}</button>
+    </div>
+    <p class="muted" style="margin:0">${deck==='white'?'Белая колода сплачивает: признания, комплименты, тёплые задания. За каждую — 1 очко.':'Чёрная колода сеет раздор: неудобные вопросы и задания. За каждую — 2 очка, за отказ минус одно.'}</p>
+    <div class="list">${DECK[deck].map((c,i)=>`<div class="row ${deck==='white'?'light':'dark'}" style="animation-delay:${Math.min(i*25,500)}ms"><div class="ic">${ink(ART[deck][c.t])}</div><div><span class="mono">${ROMAN(i+1)} · ${TYPE[c.t]}</span><p>${esc(c.x).replace(/\{p\}/g,'<u>игрок</u>')}</p></div></div>`).join('')}</div>
+  </section>`;
+  $('#back').onclick=()=>{sfx('tap');home()};
+  setBack(()=>{sfx('tap');home()});
+  app.querySelectorAll('[role=tab]').forEach(t=>t.onclick=()=>{sfx('flip');collection(t.dataset.d);window.scrollTo(0,0)});
+}
+
+/* ---------------- ПРАВИЛА ---------------- */
+function rules(){
+  const items=[
+   ['Соберитесь','От двух до двенадцати человек. Впишите имена — игра будет обращаться к вам по ним.'],
+   ['Выберите режим','Мир — только белая колода. Война — только чёрная. Смесь — обе в одной куче. Выбор — каждый сам решает, какую тянуть.'],
+   ['Тяни и переворачивай','В свой ход коснись колоды. Прочитай карту вслух. Если на ней чьё-то имя — это задание про этого человека.'],
+   ['Делай или откажись','Выполнил — забирай очки. Отказ от белой карты: тянешь чёрную. Отказ от чёрной: минус очко.'],
+   ['Стоп-слово','Любой может сказать «пас» без штрафа, если задание задевает всерьёз. Игра для смеха, а не для обид.']
+  ];
+  app.innerHTML = `<section class="screen">
+    <div class="topbar"><button class="icon-btn" id="back" aria-label="Назад">${backIcon}</button><span class="mono">Правила</span><span></span></div>
+    <h2 class="display" style="font-size:64px">Как играть</h2>
+    <div class="points"><div class="pt l"><b>Клятва</b>белая · +1 очко<br>сплочение</div><div class="pt d"><b>Проклятие</b>чёрная · +2 очка<br>раздор</div></div>
+    <div class="rules">${items.map((it,i)=>`<div class="rule-item"><span class="n">${i+1}</span><div><h3>${it[0]}</h3><p>${it[1]}</p></div></div>`).join('')}</div>
+    <p class="muted center" style="margin:0">Побеждает тот, кто первым наберёт выбранное число очков.</p>
+    <button class="btn solid" id="play"><span>Понятно, играем</span></button>
+  </section>`;
+  $('#back').onclick=()=>{sfx('tap');home()};
+  setBack(()=>{sfx('tap');home()});
+  $('#play').onclick=()=>{sfx('tap');setup()};
+}
+
+/* ---------------- «ДРОЖАНИЕ» ЛИНИЙ ---------------- */
+if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
+  let b=1;setInterval(()=>{document.body.classList.remove('b'+b);b=b%3+1;if(b>1)document.body.classList.add('b'+b)},170);
+}
+home();
+</script>
